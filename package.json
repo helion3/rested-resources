@@ -1,0 +1,20 @@
+{
+  "name": "rested-resources",
+  "version": "0.1.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "mocha"
+  },
+  "author": "viveleroi",
+  "license": "MIT",
+  "dependencies": {
+    "es6-promise": "^4.0.5",
+    "pluralize": "^3.0.0",
+    "superagent": "^2.3.0"
+  },
+  "devDependencies": {
+    "chai": "^3.5.0",
+    "mocha": "^3.1.2"
+  }
+}

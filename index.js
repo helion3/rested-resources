@@ -71,10 +71,29 @@ Resource.baseUrl = '';
 class IdentifiedResource extends Resource {
     /**
      * Initiates a DELETE request to the indentified resource URL.
+     *
+     * @return {Promise} Promise resolving request.
      */
     delete() {
         return new Promise((resolve, reject) => {
             superagent.delete(this.toUrl()).end((err, res) => {
+                if (err) {
+                    return reject(err);
+                }
+
+                resolve(res.body);
+            });
+        });
+    }
+
+    /**
+     * Retrieves this specific resource.
+     *
+     * @return {Promise} Promise resolving request.
+     */
+    get() {
+        return new Promise((resolve, reject) => {
+            superagent.get(this.toUrl()).end((err, res) => {
                 if (err) {
                     return reject(err);
                 }
@@ -99,12 +118,16 @@ class IdentifiedResource extends Resource {
             var name = NestedResource.name;
             var instance = new NestedResource(resource);
 
-            if (instance instanceof IdentifiedResource) {
-                resource[name] = function(data) {
+            if (instance instanceof ResultsResource) {
+                resource[pluralize(name.toLowerCase())] = instance;
+            } else {
+                if (name.indexOf('Factory') > 0) {
+                    resource[name] = NestedResource;
+                }
+
+                resource[name.replace('Factory', '')] = function(data) {
                     return new NestedResource(data, resource);
                 };
-            } else {
-                resource[pluralize(name.toLowerCase())] = instance;
             }
         });
     }
@@ -113,6 +136,8 @@ class IdentifiedResource extends Resource {
      * Initiates a POST request to:
      * - the results resource URL if no ID is present
      * - the indentified resource URL is ID present
+     *
+     * @return {Promise} Promise resolving request.
      */
     save() {
         return new Promise((resolve, reject) => {
@@ -125,6 +150,20 @@ class IdentifiedResource extends Resource {
             });
         });
     }
+
+    /**
+     * Updates the internal data cache and initiates a save call.
+     *
+     * @param {object} data New data object.
+     * @return {Promise} Promise resolving request.
+     */
+    update(data) {
+        Object.keys(data).forEach((k) => {
+            this.body[k] = data[k];
+        });
+
+        return this.save();
+    }
 };
 
 /**
@@ -133,6 +172,8 @@ class IdentifiedResource extends Resource {
 class ResultsResource extends Resource {
     /**
      * Queries records for this resource.
+     *
+     * @return {Promise} Promise resolving request.
      */
     query() {
         return new Promise((resolve, reject) => {

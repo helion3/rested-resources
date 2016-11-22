@@ -39,9 +39,10 @@ var Resource = class Resource {
     /**
      * Generate a URL for this resource.
      *
+     * @param {boolean} omitIdParameter Omit identification parameter even if present.
      * @return {string} Resource URL.
      */
-    toUrl() {
+    toUrl(omitIdParameter) {
         var url;
 
         // Append context URLs
@@ -55,7 +56,7 @@ var Resource = class Resource {
         url += '/' + this._namePlural;
 
         // Append identification if provided
-        if (this.body && this.body[this._id]) {
+        if (!omitIdParameter && this.body && this.body[this._id]) {
             url = tokenReplacer(url + '/:' + this._id, this.body);
         }
 
@@ -69,6 +70,15 @@ Resource.baseUrl = '';
  * A single resource that has, or will have an identification.
  */
 class IdentifiedResource extends Resource {
+    /**
+     * Initiates a POST request to the results resource URL regardless of the presence of an ID.
+     *
+     * @return {Promise} Promise resolving request.
+     */
+    create() {
+        return this.save(true);
+    }
+
     /**
      * Initiates a DELETE request to the indentified resource URL.
      *
@@ -137,9 +147,10 @@ class IdentifiedResource extends Resource {
      * - the results resource URL if no ID is present
      * - the indentified resource URL is ID present
      *
+     * @param {boolean} omitIdParameter Omit identification parameter even if present.
      * @return {Promise} Promise resolving request.
      */
-    save() {
+    save(omitIdParameter) {
         return new Promise((resolve, reject) => {
             superagent.post(this.toUrl()).send(this.body).end((err, res) => {
                 if (err) {
@@ -158,13 +169,27 @@ class IdentifiedResource extends Resource {
      * @return {Promise} Promise resolving request.
      */
     update(data) {
-        Object.keys(data).forEach((k) => {
-            this.body[k] = data[k];
-        });
+        if (data) {
+            Object.keys(data).forEach((k) => {
+                this.body[k] = data[k];
+            });
+        }
 
         return this.save();
     }
 };
+
+let instances = {};
+
+class SingletonResource extends IdentifiedResource {
+    static instance(data) {
+        if (!instances[this.name]) {
+            instances[this.name] = new (this.constructor)(data);
+        }
+
+        return instances[this.name];
+    }
+}
 
 /**
  * A results resource.
@@ -191,5 +216,6 @@ class ResultsResource extends Resource {
 module.exports = {
     IdentifiedResource: IdentifiedResource,
     Resource: Resource,
-    ResultsResource: ResultsResource
+    ResultsResource: ResultsResource,
+    SingletonResource: SingletonResource
 };

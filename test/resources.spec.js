@@ -2,6 +2,7 @@ var expect = require('chai').expect;
 var IdentifiedResource = require('../index').IdentifiedResource;
 var ResultsResource = require('../index').ResultsResource;
 var Resource = require('../index').Resource;
+var SingletonResource = require('../index').SingletonResource;
 
 class Projects extends ResultsResource {};
 class Project extends IdentifiedResource {};
@@ -52,6 +53,16 @@ describe('IdentifiedResource', function() {
         expect(project instanceof Resource).to.be.true;
     });
 
+    describe('create() method', function() {
+        it('exists', function() {
+            expect(project.create).to.be.a('function');
+        });
+
+        it('returns a promise', function() {
+            expect(project.create().then).to.be.a('function');
+        });
+    });
+
     describe('save() method for a new record', function() {
         it('exists', function() {
             expect(project.save).to.be.a('function');
@@ -75,6 +86,10 @@ describe('IdentifiedResource', function() {
             expect(existingProject.toUrl()).to.equal('/projects/1');
         });
 
+        it('generates the correct url', function() {
+            expect(existingProject.toUrl(true)).to.equal('/projects');
+        });
+
         it('returns a promise', function() {
             expect(existingProject.save().then).to.be.a('function');
         });
@@ -87,6 +102,16 @@ describe('IdentifiedResource', function() {
 
         it('returns a promise', function() {
             expect(project.delete().then).to.be.a('function');
+        });
+    });
+
+    describe('get() method', function() {
+        it('exists', function() {
+            expect(project.get).to.be.a('function');
+        });
+
+        it('returns a promise', function() {
+            expect(project.get().then).to.be.a('function');
         });
     });
 
@@ -120,6 +145,16 @@ describe('IdentifiedResource', function() {
         });
     });
 
+    describe('update() method', function() {
+        it('exists', function() {
+            expect(project.update).to.be.a('function');
+        });
+
+        it('returns a promise', function() {
+            expect(project.update().then).to.be.a('function');
+        });
+    });
+
     describe('baseUrl', function() {
         it('can be changed statically', function() {
             Resource.baseUrl = '/api/v1';
@@ -127,4 +162,24 @@ describe('IdentifiedResource', function() {
             expect(existingProject.toUrl()).to.equal('/api/v1/projects/1');
         })
     })
+});
+
+class SingletonTest extends SingletonResource {};
+
+var singleton = SingletonTest.instance();
+
+describe('SingletonResource', function() {
+    it('exists', function() {
+        expect(SingletonResource).to.be.a('function');
+    });
+
+    it('returns a new instance', function() {
+        expect(singleton).to.be.a('function');
+
+        singleton.test = 1;
+    });
+
+    it('retains data', function() {
+        expect(SingletonTest.instance().test).to.equal(1);
+    });
 });
